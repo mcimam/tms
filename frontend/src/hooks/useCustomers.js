@@ -1,0 +1,15 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { customersApi } from "../api/customers.js";
+
+export function useCustomers() {
+  return useQuery({ queryKey: ["customers"], queryFn: customersApi.list });
+}
+
+export function useCreateCustomer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: customersApi.create,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["customers"] }),
+  });
+}
