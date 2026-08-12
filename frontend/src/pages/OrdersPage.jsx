@@ -2,10 +2,11 @@ import { ChevronRight, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { DeleteButton } from "../components/DeleteButton.jsx";
 import { Field } from "../components/Field.jsx";
 import { StatusPill } from "../components/StatusPill.jsx";
 import { useCreateCustomer, useCustomers } from "../hooks/useCustomers.js";
-import { useCreateOrder, useOrders } from "../hooks/useOrders.js";
+import { useCreateOrder, useDeleteOrder, useOrders } from "../hooks/useOrders.js";
 
 const emptyForm = {
   customer_id: "", load_location: "", unload_location: "", ship_date: "", load_time: "",
@@ -18,6 +19,7 @@ export default function OrdersPage() {
   const { data: customers = [] } = useCustomers();
   const createOrder = useCreateOrder();
   const createCustomer = useCreateCustomer();
+  const deleteOrder = useDeleteOrder();
 
   const [showNew, setShowNew] = useState(false);
   const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -132,10 +134,13 @@ export default function OrdersPage() {
 
       <div className="bg-slate-900 border border-slate-800 rounded-lg divide-y divide-slate-800">
         {orders.map((o) => (
-          <button
+          <div
             key={o.id}
+            role="button"
+            tabIndex={0}
             onClick={() => navigate(`/orders/${o.id}`)}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/40 text-left"
+            onKeyDown={(e) => e.key === "Enter" && navigate(`/orders/${o.id}`)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/40 text-left cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div>
@@ -148,9 +153,14 @@ export default function OrdersPage() {
             </div>
             <div className="flex items-center gap-4">
               <StatusPill status={o.status} />
+              <DeleteButton
+                mutation={deleteOrder}
+                id={o.id}
+                confirmMessage={`Hapus order "${o.order_no}"? Driver/truck yang ter-assign akan otomatis dibebaskan.`}
+              />
               <ChevronRight size={16} className="text-slate-600" />
             </div>
-          </button>
+          </div>
         ))}
         {!isLoading && orders.length === 0 && (
           <div className="px-4 py-10 text-center text-slate-500 text-sm">

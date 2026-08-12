@@ -1,14 +1,16 @@
 import { Truck as TruckIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { DeleteButton } from "../components/DeleteButton.jsx";
 import { MasterDataTable } from "../components/MasterDataTable.jsx";
-import { useCreateTruck, useTrucks } from "../hooks/useTrucks.js";
+import { useCreateTruck, useDeleteTruck, useTrucks } from "../hooks/useTrucks.js";
 import { useOrders } from "../hooks/useOrders.js";
 
 export default function TrucksPage() {
   const { data: trucks = [], isLoading } = useTrucks();
   const { data: activeOrders } = useOrders({ page_size: 200 });
   const createTruck = useCreateTruck();
+  const deleteTruck = useDeleteTruck();
   const navigate = useNavigate();
 
   if (isLoading) return <div className="p-6 text-slate-500 text-sm">Memuat…</div>;
@@ -26,7 +28,7 @@ export default function TrucksPage() {
         { key: "type", label: "Tipe Truck" },
       ]}
       onAdd={(form) => createTruck.mutate(form)}
-      columns={["No. Polisi", "Tipe", "Status", "Order Saat Ini"]}
+      columns={["No. Polisi", "Tipe", "Status", "Order Saat Ini", "Aksi"]}
       rows={trucks.map((t) => {
         const currentOrder = orders.find(
           (o) => o.truck_id === t.id && o.status !== "COMPLETED" && o.status !== "ORDER",
@@ -52,6 +54,13 @@ export default function TrucksPage() {
               ) : (
                 <span className="text-slate-600">-</span>
               )}
+            </td>
+            <td className="px-4 py-2.5">
+              <DeleteButton
+                mutation={deleteTruck}
+                id={t.id}
+                confirmMessage={`Hapus truck "${t.plate}"?`}
+              />
             </td>
           </tr>
         );

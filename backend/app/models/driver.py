@@ -18,4 +18,4 @@ class Driver(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
     user = relationship("User", back_populates="driver", uselist=False)
-    orders = relationship("Order", back_populates="driver", foreign_keys="Order.driver_id")
+    orders = relationship("Order", back_populates="driver", foreign_keys="Order.driver_id", passive_deletes=True)

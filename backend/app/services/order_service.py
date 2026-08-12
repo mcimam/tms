@@ -42,6 +42,17 @@ def assign_order(db: Session, order: Order, driver_id: int, truck_id: int) -> Or
 VALID_STATUS_TRANSITIONS = ["ASSIGNED", "ARRIVED", "UNLOADING", "COMPLETED"]
 
 
+def free_driver_and_truck(db: Session, order: Order) -> None:
+    if order.driver_id:
+        driver = db.query(Driver).filter(Driver.id == order.driver_id).first()
+        if driver:
+            driver.status = "available"
+    if order.truck_id:
+        truck = db.query(Truck).filter(Truck.id == order.truck_id).first()
+        if truck:
+            truck.status = "available"
+
+
 def update_status(db: Session, order: Order, new_status: str) -> Order:
     if new_status not in VALID_STATUS_TRANSITIONS:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid status")
@@ -51,14 +62,7 @@ def update_status(db: Session, order: Order, new_status: str) -> Order:
     order.status = new_status
 
     if new_status == "COMPLETED":
-        if order.driver_id:
-            driver = db.query(Driver).filter(Driver.id == order.driver_id).first()
-            if driver:
-                driver.status = "available"
-        if order.truck_id:
-            truck = db.query(Truck).filter(Truck.id == order.truck_id).first()
-            if truck:
-                truck.status = "available"
+        free_driver_and_truck(db, order)
 
     db.commit()
     db.refresh(order)

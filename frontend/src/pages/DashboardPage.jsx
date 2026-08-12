@@ -3,13 +3,29 @@ import { useNavigate } from "react-router-dom";
 import { KpiCard } from "../components/KpiCard.jsx";
 import { PhotoOverlay } from "../components/PhotoOverlay.jsx";
 import { StatusPill } from "../components/StatusPill.jsx";
+import { useDrivers } from "../hooks/useDrivers.js";
 import { useOrders, useOrderStats } from "../hooks/useOrders.js";
+import { useTrucks } from "../hooks/useTrucks.js";
+
+function AvailabilityBadge({ status }) {
+  if (!status) return null;
+  const available = status === "available";
+  return (
+    <span className={`text-[10px] font-semibold ${available ? "text-emerald-400" : "text-blue-400"}`}>
+      {available ? "Available" : "On Trip"}
+    </span>
+  );
+}
 
 export default function DashboardPage() {
   const { data: stats } = useOrderStats();
   const { data: ordersRes, isLoading } = useOrders({ page_size: 50 });
+  const { data: drivers = [] } = useDrivers();
+  const { data: trucks = [] } = useTrucks();
   const navigate = useNavigate();
   const orders = ordersRes?.items || [];
+  const driverStatusById = Object.fromEntries(drivers.map((d) => [d.id, d.status]));
+  const truckStatusById = Object.fromEntries(trucks.map((t) => [t.id, t.status]));
 
   return (
     <div className="p-6 space-y-6">
@@ -60,8 +76,26 @@ export default function DashboardPage() {
               >
                 <td className="px-4 py-2.5 font-mono-data text-slate-200">{o.order_no}</td>
                 <td className="px-4 py-2.5 text-slate-300">{o.customer_name}</td>
-                <td className="px-4 py-2.5 text-slate-300">{o.truck_plate || "-"}</td>
-                <td className="px-4 py-2.5 text-slate-300">{o.driver_name || "-"}</td>
+                <td className="px-4 py-2.5 text-slate-300">
+                  {o.truck_plate ? (
+                    <div className="flex flex-col">
+                      <span>{o.truck_plate}</span>
+                      <AvailabilityBadge status={truckStatusById[o.truck_id]} />
+                    </div>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+                <td className="px-4 py-2.5 text-slate-300">
+                  {o.driver_name ? (
+                    <div className="flex flex-col">
+                      <span>{o.driver_name}</span>
+                      <AvailabilityBadge status={driverStatusById[o.driver_id]} />
+                    </div>
+                  ) : (
+                    "-"
+                  )}
+                </td>
                 <td className="px-4 py-2.5 text-slate-300">{o.current_location || "-"}</td>
                 <td className="px-4 py-2.5 text-slate-300">{o.unload_location}</td>
                 <td className="px-4 py-2.5 font-mono-data text-slate-300">{o.eta || "-"}</td>

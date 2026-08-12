@@ -142,6 +142,8 @@ def update_order(payload: OrderUpdate, order: Order = Depends(get_owned_order), 
 
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_role("staff"))])
 def delete_order(order: Order = Depends(get_owned_order), db: Session = Depends(get_db)):
+    if order.status not in ("ORDER", "COMPLETED"):
+        order_service.free_driver_and_truck(db, order)
     db.delete(order)
     db.commit()
 

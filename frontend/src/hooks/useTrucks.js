@@ -13,3 +13,11 @@ export function useCreateTruck() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["trucks"] }),
   });
 }
+
+export function useDeleteTruck() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: trucksApi.remove,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["trucks"] }),
+  });
+}

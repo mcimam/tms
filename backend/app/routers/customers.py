@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.db_utils import commit_or_conflict
 from app.deps import get_db, require_role
 from app.models.customer import Customer
 from app.schemas.customer import CustomerCreate, CustomerOut, CustomerUpdate
@@ -48,4 +49,4 @@ def delete_customer(customer_id: int, db: Session = Depends(get_db)):
     if customer is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Customer not found")
     db.delete(customer)
-    db.commit()
+    commit_or_conflict(db, "Customer masih memiliki order terkait, tidak bisa dihapus.")

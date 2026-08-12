@@ -13,3 +13,11 @@ export function useCreateCustomer() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["customers"] }),
   });
 }
+
+export function useDeleteCustomer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: customersApi.remove,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["customers"] }),
+  });
+}

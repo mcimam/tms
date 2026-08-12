@@ -13,4 +13,4 @@ class Customer(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
-    orders = relationship("Order", back_populates="customer")
+    orders = relationship("Order", back_populates="customer", passive_deletes=True)

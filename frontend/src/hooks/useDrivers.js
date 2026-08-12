@@ -21,3 +21,11 @@ export function useUpdateDriver() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["drivers"] }),
   });
 }
+
+export function useDeleteDriver() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: driversApi.remove,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["drivers"] }),
+  });
+}

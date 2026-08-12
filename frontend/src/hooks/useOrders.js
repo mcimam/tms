@@ -42,6 +42,14 @@ export function useCreateOrder() {
   });
 }
 
+export function useDeleteOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ordersApi.remove,
+    onSuccess: () => invalidateOrderRelated(qc),
+  });
+}
+
 export function useAssignOrder() {
   const qc = useQueryClient();
   return useMutation({

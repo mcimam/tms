@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.db_utils import commit_or_conflict
 from app.deps import get_db, require_role
 from app.models.truck import Truck
 from app.schemas.truck import TruckCreate, TruckOut, TruckUpdate
@@ -53,4 +54,4 @@ def delete_truck(truck_id: int, db: Session = Depends(get_db)):
     if truck is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Truck not found")
     db.delete(truck)
-    db.commit()
+    commit_or_conflict(db, "Truck masih memiliki order terkait, tidak bisa dihapus.")

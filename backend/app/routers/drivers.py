@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.db_utils import commit_or_conflict
 from app.deps import get_db, require_role
 from app.models.driver import Driver
 from app.models.user import User
@@ -111,4 +112,4 @@ def delete_driver(driver_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Driver not found")
     db.query(User).filter(User.driver_id == driver.id).delete()
     db.delete(driver)
-    db.commit()
+    commit_or_conflict(db, "Driver masih memiliki order terkait, tidak bisa dihapus.")

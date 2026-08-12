@@ -17,4 +17,4 @@ class Truck(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
-    orders = relationship("Order", back_populates="truck", foreign_keys="Order.truck_id")
+    orders = relationship("Order", back_populates="truck", foreign_keys="Order.truck_id", passive_deletes=True)

@@ -1,14 +1,16 @@
 import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { DeleteButton } from "../components/DeleteButton.jsx";
 import { MasterDataTable } from "../components/MasterDataTable.jsx";
-import { useCreateDriver, useDrivers } from "../hooks/useDrivers.js";
+import { useCreateDriver, useDeleteDriver, useDrivers } from "../hooks/useDrivers.js";
 import { useOrders } from "../hooks/useOrders.js";
 
 export default function DriversPage() {
   const { data: drivers = [], isLoading } = useDrivers();
   const { data: activeOrders } = useOrders({ page_size: 200 });
   const createDriver = useCreateDriver();
+  const deleteDriver = useDeleteDriver();
   const navigate = useNavigate();
 
   if (isLoading) return <div className="p-6 text-slate-500 text-sm">Memuat…</div>;
@@ -35,7 +37,7 @@ export default function DriversPage() {
           password: form.password || undefined,
         })
       }
-      columns={["Nama", "No. HP", "Login", "Status", "Order Saat Ini"]}
+      columns={["Nama", "No. HP", "Login", "Status", "Order Saat Ini", "Aksi"]}
       rows={drivers.map((d) => {
         const currentOrder = orders.find(
           (o) => o.driver_id === d.id && o.status !== "COMPLETED" && o.status !== "ORDER",
@@ -66,6 +68,13 @@ export default function DriversPage() {
               ) : (
                 <span className="text-slate-600">-</span>
               )}
+            </td>
+            <td className="px-4 py-2.5">
+              <DeleteButton
+                mutation={deleteDriver}
+                id={d.id}
+                confirmMessage={`Hapus driver "${d.name}"?`}
+              />
             </td>
           </tr>
         );
