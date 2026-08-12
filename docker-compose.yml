@@ -13,12 +13,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      tmsnet:
+        ipv4_address: 10.89.2.2
 
   backend:
     build: ./backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://tms:change_me@db:5432/tms}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://tms:change_me@10.89.2.2:5432/tms}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change_me_to_a_long_random_value}
       JWT_ACCESS_TOKEN_EXPIRE_MINUTES: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
       UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
@@ -30,6 +33,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      tmsnet:
+        ipv4_address: 10.89.2.3
 
   frontend:
     build: ./frontend
@@ -38,6 +44,15 @@ services:
       - "127.0.0.1:8080:80"
     depends_on:
       - backend
+    networks:
+      tmsnet:
+        ipv4_address: 10.89.2.4
+
+networks:
+  tmsnet:
+    ipam:
+      config:
+        - subnet: 10.89.2.0/24
 
 volumes:
   pgdata:
