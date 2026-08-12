@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-tms}
@@ -22,10 +22,11 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change_me_to_a_long_random_value}
       JWT_ACCESS_TOKEN_EXPIRE_MINUTES: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
       UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     volumes:
       - uploads:/app/uploads
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -34,7 +35,7 @@ services:
     build: ./frontend
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     depends_on:
       - backend
 
