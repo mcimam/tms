@@ -3,24 +3,60 @@ import { useState } from "react";
 
 import { KpiCard } from "../components/KpiCard.jsx";
 import { StatusPill } from "../components/StatusPill.jsx";
+import { useCustomers } from "../hooks/useCustomers.js";
 import { useDrivers } from "../hooks/useDrivers.js";
 import { useOrders, useOrderStats } from "../hooks/useOrders.js";
 import { useTrucks } from "../hooks/useTrucks.js";
+import { ordersApi } from "../api/orders.js";
 import { exportOrdersExcel } from "../lib/exportExcel.js";
 import { STAGE_LABEL, STAGES } from "../lib/constants.js";
 
+const PREVIEW_PAGE_SIZE = 200;
+
+const emptyFilters = { status: "ALL", customer_id: "", date_from: "", date_to: "" };
+
 export default function ReportingPage() {
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const { data: ordersRes } = useOrders({ status: statusFilter === "ALL" ? undefined : statusFilter, page_size: 500 });
-  const { data: stats } = useOrderStats();
+  const [filters, setFilters] = useState(emptyFilters);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+
+  const orderQueryParams = {
+    status: filters.status === "ALL" ? undefined : filters.status,
+    customer_id: filters.customer_id || undefined,
+    date_from: filters.date_from || undefined,
+    date_to: filters.date_to || undefined,
+  };
+  const statsParams = {
+    customer_id: filters.customer_id || undefined,
+    date_from: filters.date_from || undefined,
+    date_to: filters.date_to || undefined,
+  };
+
+  const { data: ordersRes, isLoading } = useOrders({ ...orderQueryParams, page_size: PREVIEW_PAGE_SIZE });
+  const { data: stats } = useOrderStats(statsParams);
+  const { data: customers = [] } = useCustomers();
   const { data: drivers = [] } = useDrivers();
   const { data: trucks = [] } = useTrucks();
 
   const filteredOrders = ordersRes?.items || [];
+  const totalMatching = ordersRes?.total ?? filteredOrders.length;
   const counts = { total: stats?.total ?? 0, ...STAGES.reduce((acc, s) => ({ ...acc, [s]: stats?.[s] ?? 0 }), {}) };
 
-  function downloadExcel() {
-    exportOrdersExcel({ orders: filteredOrders, drivers, trucks, counts });
+  async function downloadExcel() {
+    setExporting(true);
+    setExportError("");
+    try {
+      const allOrders = await ordersApi.listAll(orderQueryParams);
+      exportOrdersExcel({ orders: allOrders, drivers, trucks, counts });
+    } catch (err) {
+      setExportError(err.message || "Gagal menyiapkan file Excel.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function updateFilter(key, value) {
+    setFilters((f) => ({ ...f, [key]: value }));
   }
 
   return (
@@ -33,28 +69,79 @@ export default function ReportingPage() {
             <p className="text-xs text-slate-500">Export data order, driver, dan truck ke Excel</p>
           </div>
         </div>
-        <button
-          onClick={downloadExcel}
-          className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold text-sm px-4 py-2 rounded-md"
-        >
-          <Download size={16} /> Download Excel
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={downloadExcel}
+            disabled={exporting}
+            className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 disabled:opacity-60 text-slate-900 font-semibold text-sm px-4 py-2 rounded-md"
+          >
+            <Download size={16} /> {exporting ? "Menyiapkan…" : "Download Excel"}
+          </button>
+          {exportError && <p className="text-xs text-red-400">{exportError}</p>}
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <label className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Filter Status</label>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-slate-100"
-        >
-          <option value="ALL">Semua Status</option>
-          {STAGES.map((s) => (
-            <option key={s} value={s}>
-              {STAGE_LABEL[s]}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="block">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Status</span>
+          <select
+            value={filters.status}
+            onChange={(e) => updateFilter("status", e.target.value)}
+            className="mt-1 bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-slate-100"
+          >
+            <option value="ALL">Semua Status</option>
+            {STAGES.map((s) => (
+              <option key={s} value={s}>
+                {STAGE_LABEL[s]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Customer</span>
+          <select
+            value={filters.customer_id}
+            onChange={(e) => updateFilter("customer_id", e.target.value)}
+            className="mt-1 bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-slate-100"
+          >
+            <option value="">Semua Customer</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Tanggal Kirim Dari</span>
+          <input
+            type="date"
+            value={filters.date_from}
+            onChange={(e) => updateFilter("date_from", e.target.value)}
+            className="mt-1 bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-slate-100"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Sampai</span>
+          <input
+            type="date"
+            value={filters.date_to}
+            onChange={(e) => updateFilter("date_to", e.target.value)}
+            className="mt-1 bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-slate-100"
+          />
+        </label>
+
+        {(filters.status !== "ALL" || filters.customer_id || filters.date_from || filters.date_to) && (
+          <button
+            onClick={() => setFilters(emptyFilters)}
+            className="text-xs text-slate-500 hover:text-slate-300 underline pb-2"
+          >
+            Reset filter
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -64,8 +151,15 @@ export default function ReportingPage() {
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-800">
-          <h2 className="text-sm font-semibold text-slate-200">Preview Data Order ({filteredOrders.length})</h2>
+        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-200">
+            Preview Data Order ({filteredOrders.length}{totalMatching > filteredOrders.length ? ` dari ${totalMatching}` : ""})
+          </h2>
+          {totalMatching > filteredOrders.length && (
+            <p className="text-xs text-slate-500">
+              Preview dibatasi {PREVIEW_PAGE_SIZE} baris — Download Excel untuk semua data.
+            </p>
+          )}
         </div>
         <table className="w-full text-sm">
           <thead>
@@ -91,10 +185,10 @@ export default function ReportingPage() {
                 </td>
               </tr>
             ))}
-            {filteredOrders.length === 0 && (
+            {!isLoading && filteredOrders.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                  Tidak ada order untuk status ini.
+                  Tidak ada order untuk filter ini.
                 </td>
               </tr>
             )}

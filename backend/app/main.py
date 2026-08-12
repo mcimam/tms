@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, customers, drivers, orders, trucks
+from app.routers import audit_logs, auth, customers, drivers, orders, trucks
 
 app = FastAPI(title="TrackIt TMS API")
 
@@ -20,6 +20,7 @@ app.include_router(customers.router, prefix="/api")
 app.include_router(drivers.router, prefix="/api")
 app.include_router(trucks.router, prefix="/api")
 app.include_router(orders.router, prefix="/api")
+app.include_router(audit_logs.router, prefix="/api")
 
 
 @app.get("/api/health")

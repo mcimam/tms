@@ -2,6 +2,7 @@ import { ArrowLeft, Camera, Truck as TruckIcon, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { AuditLogList } from "../components/AuditLogList.jsx";
 import { Field } from "../components/Field.jsx";
 import { InfoBlock, Row } from "../components/InfoBlock.jsx";
 import { RouteStrip } from "../components/RouteStrip.jsx";
@@ -179,6 +180,14 @@ export default function OrderDetailPage() {
           )}
         </InfoBlock>
       </div>
+
+      <InfoBlock title="Riwayat Status Order">
+        <AuditLogList
+          entityType="order"
+          entityId={id}
+          emptyText="Belum ada perubahan status tercatat."
+        />
+      </InfoBlock>
 
       {canUpdateStatus && (
         <InfoBlock title="Update Status Order (Manual)">

@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db_utils import commit_or_conflict
-from app.deps import get_db, require_role
+from app.deps import get_current_user, get_db, require_role
 from app.models.driver import Driver
 from app.models.user import User
 from app.schemas.driver import DriverCreate, DriverOut, DriverUpdate
 from app.security import hash_password
+from app.services import audit_service
 
 router = APIRouter(prefix="/drivers", tags=["drivers"], dependencies=[Depends(require_role("staff"))])
 
@@ -61,7 +62,12 @@ def get_driver(driver_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{driver_id}", response_model=DriverOut)
-def update_driver(driver_id: int, payload: DriverUpdate, db: Session = Depends(get_db)):
+def update_driver(
+    driver_id: int,
+    payload: DriverUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
     if driver is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Driver not found")
@@ -70,6 +76,9 @@ def update_driver(driver_id: int, payload: DriverUpdate, db: Session = Depends(g
     username = data.pop("username", None)
     password = data.pop("password", None)
     for key, value in data.items():
+        old_value = getattr(driver, key)
+        if old_value != value:
+            audit_service.log_change(db, "driver", driver.id, key, old_value, value, user)
         setattr(driver, key, value)
 
     if username or password:

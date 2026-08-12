@@ -16,7 +16,6 @@ class TruckCreate(TruckBase):
 class TruckUpdate(BaseModel):
     plate: Optional[str] = None
     type: Optional[str] = None
-    status: Optional[str] = None
 
 
 class TruckOut(TruckBase):

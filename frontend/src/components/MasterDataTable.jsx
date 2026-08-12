@@ -2,8 +2,21 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 
 import { Field } from "./Field.jsx";
+import { SearchInput } from "./SearchInput.jsx";
 
-export function MasterDataTable({ title, icon: Icon, columns, rows, fields, onAdd, addLabel, hint }) {
+export function MasterDataTable({
+  title,
+  icon: Icon,
+  columns,
+  rows,
+  fields,
+  onAdd,
+  addLabel,
+  hint,
+  search,
+  onSearchChange,
+  searchPlaceholder,
+}) {
   const [showNew, setShowNew] = useState(false);
   const emptyForm = Object.fromEntries(fields.map((f) => [f.key, ""]));
   const [form, setForm] = useState(emptyForm);
@@ -32,6 +45,15 @@ export function MasterDataTable({ title, icon: Icon, columns, rows, fields, onAd
           <Plus size={16} /> {addLabel}
         </button>
       </div>
+
+      {onSearchChange && (
+        <SearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder={searchPlaceholder || "Cari…"}
+          className="max-w-xs"
+        />
+      )}
 
       {showNew && (
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-3">
@@ -74,7 +96,9 @@ export function MasterDataTable({ title, icon: Icon, columns, rows, fields, onAd
             {(!rows || rows.length === 0) && (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-10 text-center text-slate-500">
-                  Belum ada data. Klik "{addLabel}" untuk menambahkan.
+                  {search
+                    ? "Tidak ada data yang cocok dengan pencarian."
+                    : `Belum ada data. Klik "${addLabel}" untuk menambahkan.`}
                 </td>
               </tr>
             )}

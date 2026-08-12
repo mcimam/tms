@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 
 import { DeleteButton } from "../components/DeleteButton.jsx";
 import { Field } from "../components/Field.jsx";
+import { SearchInput } from "../components/SearchInput.jsx";
 import { StatusPill } from "../components/StatusPill.jsx";
 import { useCreateCustomer, useCustomers } from "../hooks/useCustomers.js";
+import { useDebouncedValue } from "../hooks/useDebouncedValue.js";
 import { useCreateOrder, useDeleteOrder, useOrders } from "../hooks/useOrders.js";
 
 const emptyForm = {
@@ -15,7 +17,9 @@ const emptyForm = {
 
 export default function OrdersPage() {
   const navigate = useNavigate();
-  const { data: ordersRes, isLoading } = useOrders({ page_size: 100 });
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const { data: ordersRes, isLoading } = useOrders({ page_size: 100, search: debouncedSearch || undefined });
   const { data: customers = [] } = useCustomers();
   const createOrder = useCreateOrder();
   const createCustomer = useCreateCustomer();
@@ -64,6 +68,13 @@ export default function OrdersPage() {
           <Plus size={16} /> Order Baru
         </button>
       </div>
+
+      <SearchInput
+        value={search}
+        onChange={setSearch}
+        placeholder="Cari no. order atau nama customer…"
+        className="max-w-xs"
+      />
 
       {showNew && (
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-3">
@@ -164,7 +175,9 @@ export default function OrdersPage() {
         ))}
         {!isLoading && orders.length === 0 && (
           <div className="px-4 py-10 text-center text-slate-500 text-sm">
-            Belum ada order. Klik "Order Baru" untuk membuat order pertama.
+            {debouncedSearch
+              ? "Tidak ada order yang cocok dengan pencarian."
+              : 'Belum ada order. Klik "Order Baru" untuk membuat order pertama.'}
           </div>
         )}
       </div>

@@ -14,6 +14,14 @@ export function useCreateTruck() {
   });
 }
 
+export function useUpdateTruck() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => trucksApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["trucks"] }),
+  });
+}
+
 export function useDeleteTruck() {
   const qc = useQueryClient();
   return useMutation({

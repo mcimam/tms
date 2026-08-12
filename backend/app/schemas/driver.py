@@ -17,7 +17,6 @@ class DriverCreate(DriverBase):
 class DriverUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
-    status: Optional[str] = None
     username: Optional[str] = None
     password: Optional[str] = None
 

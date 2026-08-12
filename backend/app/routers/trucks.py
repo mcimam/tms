@@ -2,9 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db_utils import commit_or_conflict
-from app.deps import get_db, require_role
+from app.deps import get_current_user, get_db, require_role
 from app.models.truck import Truck
+from app.models.user import User
 from app.schemas.truck import TruckCreate, TruckOut, TruckUpdate
+from app.services import audit_service
 
 router = APIRouter(prefix="/trucks", tags=["trucks"], dependencies=[Depends(require_role("staff"))])
 
@@ -37,11 +39,19 @@ def get_truck(truck_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{truck_id}", response_model=TruckOut)
-def update_truck(truck_id: int, payload: TruckUpdate, db: Session = Depends(get_db)):
+def update_truck(
+    truck_id: int,
+    payload: TruckUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     truck = db.query(Truck).filter(Truck.id == truck_id).first()
     if truck is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Truck not found")
     for key, value in payload.model_dump(exclude_unset=True).items():
+        old_value = getattr(truck, key)
+        if old_value != value:
+            audit_service.log_change(db, "truck", truck.id, key, old_value, value, user)
         setattr(truck, key, value)
     db.commit()
     db.refresh(truck)

@@ -141,22 +141,32 @@ def update_order(payload: OrderUpdate, order: Order = Depends(get_owned_order), 
 
 
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_role("staff"))])
-def delete_order(order: Order = Depends(get_owned_order), db: Session = Depends(get_db)):
+def delete_order(order: Order = Depends(get_owned_order), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     if order.status not in ("ORDER", "COMPLETED"):
-        order_service.free_driver_and_truck(db, order)
+        order_service.free_driver_and_truck(db, order, user)
     db.delete(order)
     db.commit()
 
 
 @router.post("/{order_id}/assign", response_model=OrderOut, dependencies=[Depends(require_role("staff"))])
-def assign_order(payload: OrderAssignRequest, order: Order = Depends(get_owned_order), db: Session = Depends(get_db)):
-    order = order_service.assign_order(db, order, payload.driver_id, payload.truck_id)
+def assign_order(
+    payload: OrderAssignRequest,
+    order: Order = Depends(get_owned_order),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    order = order_service.assign_order(db, order, payload.driver_id, payload.truck_id, user)
     return _to_out(order)
 
 
 @router.patch("/{order_id}/status", response_model=OrderOut, dependencies=[Depends(require_role("staff"))])
-def update_order_status(payload: OrderStatusUpdate, order: Order = Depends(get_owned_order), db: Session = Depends(get_db)):
-    order = order_service.update_status(db, order, payload.status)
+def update_order_status(
+    payload: OrderStatusUpdate,
+    order: Order = Depends(get_owned_order),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    order = order_service.update_status(db, order, payload.status, user)
     return _to_out(order)
 
 
