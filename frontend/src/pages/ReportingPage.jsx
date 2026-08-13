@@ -151,7 +151,7 @@ export default function ReportingPage() {
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between gap-3 flex-wrap">
           <h2 className="text-sm font-semibold text-slate-200">
             Preview Data Order ({filteredOrders.length}{totalMatching > filteredOrders.length ? ` dari ${totalMatching}` : ""})
           </h2>
@@ -161,6 +161,7 @@ export default function ReportingPage() {
             </p>
           )}
         </div>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-800">
@@ -194,6 +195,7 @@ export default function ReportingPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

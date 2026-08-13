@@ -68,7 +68,7 @@ export default function OrderDetailPage() {
         <ArrowLeft size={15} /> Kembali
       </button>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="font-condensed text-2xl font-bold text-slate-100">{order.order_no}</h1>
           <p className="text-sm text-slate-500">{order.customer_name}</p>
@@ -110,7 +110,7 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <InfoBlock title="Detail Pengiriman">
           <Row k="Lokasi Muat" v={order.load_location} />
           <Row k="Lokasi Bongkar" v={order.unload_location} />
@@ -194,8 +194,8 @@ export default function OrderDetailPage() {
           <p className="text-xs text-slate-500 -mt-1 mb-2">
             Status TIDAK berubah otomatis. Admin memilih status sesuai kondisi terkini lalu menyimpan.
           </p>
-          <div className="flex items-end gap-3">
-            <label className="block flex-1">
+          <div className="flex items-end gap-3 flex-wrap">
+            <label className="block flex-1 min-w-[160px]">
               <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Status Order</span>
               <select
                 value={statusForm || order.status}
@@ -222,7 +222,7 @@ export default function OrderDetailPage() {
       {canUpdatePosition && (
         <InfoBlock title="Update Posisi & ETA (Manual)">
           <p className="text-xs text-slate-500 -mt-1 mb-2">Diisi manual oleh admin, atau berdasarkan info yang dikirim driver.</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Posisi Truck Saat Ini" value={pos.current_location} onChange={(v) => setPosForm({ ...pos, current_location: v })} />
             <Field label="ETA" value={pos.eta} onChange={(v) => setPosForm({ ...pos, eta: v })} />
             <Field label="Estimasi Bongkar Mulai" value={pos.est_unload_start} onChange={(v) => setPosForm({ ...pos, est_unload_start: v })} />

@@ -30,7 +30,7 @@ export function MasterDataTable({
 
   return (
     <div className="p-6 space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Icon size={20} className="text-amber-400" />
           <div>
@@ -63,7 +63,7 @@ export function MasterDataTable({
               <X size={16} />
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {fields.map((f) => (
               <Field
                 key={f.key}
@@ -80,12 +80,12 @@ export function MasterDataTable({
         </div>
       )}
 
-      <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
+      <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-800">
               {columns.map((c) => (
-                <th key={c} className="px-4 py-2.5 font-semibold">
+                <th key={c} className="px-4 py-2.5 font-semibold whitespace-nowrap">
                   {c}
                 </th>
               ))}

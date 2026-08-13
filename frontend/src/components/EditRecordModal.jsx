@@ -37,7 +37,7 @@ export function EditRecordModal({
       onClick={onClose}
     >
       <div
-        className="bg-slate-900 border border-slate-800 rounded-lg p-5 w-full max-w-md space-y-3"
+        className="bg-slate-900 border border-slate-800 rounded-lg p-5 w-full max-w-md max-h-[90vh] overflow-y-auto space-y-3"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -47,9 +47,9 @@ export function EditRecordModal({
           </button>
         </div>
         {extraHint && <p className="text-xs text-slate-500 -mt-1">{extraHint}</p>}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {fields.map((f) => (
-            <div key={f.key} className={f.full ? "col-span-2" : ""}>
+            <div key={f.key} className={f.full ? "sm:col-span-2" : ""}>
               <Field
                 label={f.label}
                 type={f.type || "text"}

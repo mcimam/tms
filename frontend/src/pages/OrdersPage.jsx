@@ -29,14 +29,25 @@ export default function OrdersPage() {
   const [showNewCustomer, setShowNewCustomer] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
 
   const orders = ordersRes?.items || [];
 
+  function validate() {
+    const errs = {};
+    if (!form.customer_id) errs.customer_id = "Customer wajib dipilih";
+    if (!form.load_location.trim()) errs.load_location = "Lokasi muat wajib diisi";
+    if (!form.unload_location.trim()) errs.unload_location = "Lokasi bongkar wajib diisi";
+    return errs;
+  }
+
   function submit() {
-    if (!form.customer_id || !form.load_location || !form.unload_location) return;
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
     createOrder.mutate(
       { ...form, customer_id: Number(form.customer_id), ship_date: form.ship_date || undefined },
-      { onSuccess: () => { setForm(emptyForm); setShowNew(false); } },
+      { onSuccess: () => { setForm(emptyForm); setErrors({}); setShowNew(false); } },
     );
   }
 
@@ -56,7 +67,7 @@ export default function OrdersPage() {
 
   return (
     <div className="p-6 space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="font-condensed text-2xl font-bold text-slate-100">Orders</h1>
           <p className="text-sm text-slate-500">Semua order dari customer</p>
@@ -84,14 +95,18 @@ export default function OrdersPage() {
               <X size={16} />
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block">
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Customer</span>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                  Customer<span className="text-red-400 ml-0.5">*</span>
+                </span>
                 <select
                   value={form.customer_id}
                   onChange={(e) => setForm({ ...form, customer_id: e.target.value })}
-                  className="mt-1 w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-1.5 text-sm text-slate-100 focus:outline-none focus:border-amber-400"
+                  className={`mt-1 w-full bg-slate-950 border rounded-md px-3 py-1.5 text-sm text-slate-100 focus:outline-none focus:border-amber-400 ${
+                    errors.customer_id ? "border-red-500" : "border-slate-700"
+                  }`}
                 >
                   <option value="">Pilih customer</option>
                   {customers.map((c) => (
@@ -101,6 +116,7 @@ export default function OrdersPage() {
                   ))}
                 </select>
               </label>
+              {errors.customer_id && <span className="mt-1 block text-xs text-red-400">{errors.customer_id}</span>}
               {!showNewCustomer ? (
                 <button
                   onClick={() => setShowNewCustomer(true)}
@@ -130,13 +146,26 @@ export default function OrdersPage() {
               )}
             </div>
             <Field label="Jenis Barang" value={form.cargo_type} onChange={(v) => setForm({ ...form, cargo_type: v })} />
-            <Field label="Lokasi Muat" value={form.load_location} onChange={(v) => setForm({ ...form, load_location: v })} />
-            <Field label="Lokasi Bongkar" value={form.unload_location} onChange={(v) => setForm({ ...form, unload_location: v })} />
+            <Field
+              label="Lokasi Muat"
+              required
+              error={errors.load_location}
+              value={form.load_location}
+              onChange={(v) => setForm({ ...form, load_location: v })}
+            />
+            <Field
+              label="Lokasi Bongkar"
+              required
+              error={errors.unload_location}
+              value={form.unload_location}
+              onChange={(v) => setForm({ ...form, unload_location: v })}
+            />
             <Field label="Tanggal Pengiriman" type="date" value={form.ship_date} onChange={(v) => setForm({ ...form, ship_date: v })} />
             <Field label="Jam Muat" type="time" value={form.load_time} onChange={(v) => setForm({ ...form, load_time: v })} />
             <Field label="Jumlah / Tonase" value={form.tonnage} onChange={(v) => setForm({ ...form, tonnage: v })} />
             <Field label="Catatan" value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} />
           </div>
+          {createOrder.isError && <p className="text-xs text-red-400">{createOrder.error.message}</p>}
           <button onClick={submit} className="bg-amber-400 text-slate-900 text-sm font-semibold px-4 py-2 rounded-md hover:bg-amber-300">
             Simpan Order
           </button>

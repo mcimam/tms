@@ -53,6 +53,7 @@ export default function DashboardPage() {
         <div className="px-4 py-3 border-b border-slate-800">
           <h2 className="text-sm font-semibold text-slate-200">Semua Order</h2>
         </div>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-800">
@@ -114,6 +115,7 @@ export default function DashboardPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
