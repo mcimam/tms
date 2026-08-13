@@ -4,6 +4,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.deps import get_current_user, get_db, get_owned_order, require_role
@@ -114,16 +115,25 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db)):
     if customer is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Customer not found")
 
-    order = Order(
-        order_no=order_service.generate_order_no(db),
-        status="ORDER",
-        current_location=payload.load_location,
-        **payload.model_dump(),
-    )
-    db.add(order)
-    db.commit()
-    db.refresh(order)
-    return _to_out(order)
+    max_attempts = 5
+    for attempt in range(max_attempts):
+        order = Order(
+            order_no=order_service.generate_order_no(db),
+            status="ORDER",
+            current_location=payload.load_location,
+            **payload.model_dump(),
+        )
+        db.add(order)
+        try:
+            db.commit()
+        except IntegrityError as exc:
+            db.rollback()
+            constraint = getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
+            if constraint != "uq_orders_order_no" or attempt == max_attempts - 1:
+                raise
+            continue
+        db.refresh(order)
+        return _to_out(order)
 
 
 @router.get("/{order_id}", response_model=OrderOut)
