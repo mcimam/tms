@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.driver import Driver
@@ -15,8 +14,18 @@ from app.services import audit_service
 def generate_order_no(db: Session) -> str:
     today = datetime.now(timezone.utc).strftime("%Y%m%d")
     prefix = f"ORD-{today}-"
-    count_today = db.query(func.count(Order.id)).filter(Order.order_no.like(f"{prefix}%")).scalar() or 0
-    return f"{prefix}{count_today + 1:04d}"
+    # Base the next number on the highest suffix ever used today, not a count
+    # of currently-existing rows: a deleted order leaves a gap, and counting
+    # rows would regenerate an already-used (and still taken) order_no forever.
+    last_order_no = (
+        db.query(Order.order_no)
+        .filter(Order.order_no.like(f"{prefix}%"))
+        .order_by(Order.order_no.desc())
+        .limit(1)
+        .scalar()
+    )
+    next_seq = int(last_order_no[len(prefix):]) + 1 if last_order_no else 1
+    return f"{prefix}{next_seq:04d}"
 
 
 def assign_order(db: Session, order: Order, driver_id: int, truck_id: int, user: Optional[User] = None) -> Order:
